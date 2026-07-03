@@ -20,6 +20,9 @@
 #include "phar_internal.h"
 #include "ext/standard/php_string.h" /* For php_stristr() */
 
+/* Maximum allowed size for a ././@LongLink filename entry in a TAR phar */
+#define PHAR_TAR_LONGLINK_MAX UINT16_MAX
+
 static uint32_t phar_tar_number(const char *buf, size_t len) /* {{{ */
 {
 	uint32_t num = 0;
@@ -365,8 +368,9 @@ bail:
 			/* support the ././@LongLink system for storing long filenames */
 			entry.filename_len = entry.uncompressed_filesize;
 
-			/* Check for overflow - bug 61065 */
-			if (entry.filename_len == UINT_MAX || entry.filename_len == 0) {
+			/* Check for overflow or unreasonable size - bug 61065 */
+			if (entry.filename_len == 0
+					|| entry.filename_len > PHAR_TAR_LONGLINK_MAX) {
 				if (error) {
 					spprintf(error, 4096, "phar error: \"%s\" is a corrupted tar file (invalid entry size)", fname);
 				}
