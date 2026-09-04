@@ -1334,6 +1334,7 @@ static ssize_t single_send(ftpbuf_t *ftp, php_socket_t s, void *buf, size_t size
 	}
 
 	do {
+		sent = 0;
 		ret = SSL_write_ex(handle, buf, size, &sent);
 		err = SSL_get_error(handle, ret);
 
@@ -1344,7 +1345,6 @@ static ssize_t single_send(ftpbuf_t *ftp, php_socket_t s, void *buf, size_t size
 
 			case SSL_ERROR_ZERO_RETURN:
 				retry = false;
-				sent = 0;
 				SSL_shutdown(handle);
 				break;
 
